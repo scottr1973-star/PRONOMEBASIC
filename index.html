@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ProNome — Poly4 (32-Beat) — NUMBER ARROWS + SLIDERS</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0f0c">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBzdHlsZT0iYmFja2dyb3VuZDojMGIwZjBjIj48cGF0aCBkPSJNMjU2IDQ4IEw0MTY 0NjQgTDEwMCA0NjQgWiIgZmlsbD0iIzI5YjZmNiIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjM2MCIgcj0iNDAiIGZpbGw9IiMwYjBmMGMiLz48L3N2Zz4=">
+
+<style>
+  :root{
+    --bg:#0b0f0c;--panel:#111718;--panel2:#0e1416;--ink:#e8f5e9;--muted:#9fb3a9;--line:rgba(255,255,255,.08);
+    --g1:#00e676;--g2:#29b6f6;--g3:#ffd54f;--g4:#ff8a65;--r:14px;--shadow:0 8px 22px rgba(0,0,0,.45)
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:#0b0f0c;color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:980px;margin:22px auto;padding:12px}
+  h1{margin:0 0 6px;font-size:22px;letter-spacing:.3px;background:linear-gradient(90deg,var(--g1),#b2ff59 40%,var(--g1));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:12px;margin-bottom:10px}
+
+  .grid{display:grid;grid-template-columns:1fr auto;gap:12px}
+  @media (max-width: 720px){
+    .grid{grid-template-columns:1fr}
+    .sideCard{max-width:260px;justify-self:center}
+  }
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--r);padding:12px;box-shadow:var(--shadow)}
+
+  label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+
+  input[type="number"], select {
+    width:100%;padding:6px 8px;border-radius:10px;background:#0b1314;color:var(--ink);
+    border:1px solid var(--line);outline:none;font-size:13px;
+  }
+  input[type="range"]{width:100%;accent-color:#39e}
+  .num.sm{max-width:100px}
+
+  .row{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:10px;margin-bottom:8px}
+
+  .setBtn,.stepBtn{padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:#152325;color:var(--ink);font-weight:700;cursor:pointer;font-size:13px}
+  .stepper{display:flex;gap:6px;align-items:center}
+  .stepBtn{width:36px;text-align:center;padding:6px 0}
+
+  .switch{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#0b1314;border:1px solid var(--line)}
+  .badge{font-size:11px;color:#0b0f0c;background:#cde7df;border:0;padding:4px 7px;border-radius:999px;font-weight:800;white-space:nowrap}
+  .bpmBadge{background:#1b4}
+
+  .layers{display:grid;grid-template-columns:1fr;gap:8px}
+  .layer{
+    display:grid;grid-template-columns:76px 18px 210px 140px 80px 60px 90px;
+    gap:10px;align-items:end;padding:8px;border-radius:12px;border:1px solid var(--line);background:#0b1314
+  }
+  .tag{font-size:11px;color:#0b0f0c;padding:5px 8px;border-radius:999px;font-weight:800;justify-self:start;text-align:center}
+  .l1{background:var(--g1)} .l2{background:var(--g2)} .l3{background:var(--g3)} .l4{background:var(--g4)}
+  .pulseDot{width:12px;height:12px;border-radius:50%;opacity:.25;transition:transform 50ms ease-out, opacity 120ms ease}
+  .pd1{background:var(--g1)} .pd2{background:var(--g2)} .pd3{background:var(--g3)} .pd4{background:var(--g4)}
+  .pulseOn{transform:scale(1.3);opacity:1}
+
+  .vwrap{display:flex;justify-content:center}
+  input[type="range"].vertical{writing-mode:bt-lr;-webkit-appearance:slider-vertical;width:20px;height:84px;padding:0;margin:0}
+  @supports not (-webkit-appearance: slider-vertical) { input[type="range"].vertical{transform:rotate(-90deg);width:84px;height:20px} }
+
+  /* 4 rows × 32 small lights (measure is 32 beats) */
+  .steps{display:grid;grid-template-rows:repeat(4, 1fr);gap:6px;margin:6px 0 10px}
+  .rowSteps{display:grid;grid-template-columns:repeat(32, 1fr);gap:3px}
+
+  /* stronger LED visibility */
+  .cell{
+    height:8px;border-radius:3px;background:#22302d;opacity:.45;
+    transition:transform .05s ease, box-shadow .05s ease, background-color .05s ease, opacity .05s ease;
+  }
+  .c1{background:#113a2a} .c2{background:#0c2a3b} .c3{background:#3c3510} .c4{background:#3b1f16}
+  .c1.on{background:var(--g1); opacity:1; box-shadow:0 0 8px 1px rgba(43,209,126,0.75)}
+  .c2.on{background:var(--g2); opacity:1; box-shadow:0 0 8px 1px rgba(41,182,246,0.75)}
+  .c3.on{background:var(--g3); opacity:1; box-shadow:0 0 8px 1px rgba(255,213,79,0.75)}
+  .c4.on{background:var(--g4); opacity:1; box-shadow:0 0 8px 1px rgba(255,138,101,0.75)}
+
+  /* Right-side circle */
+  .sideCard{width:240px}
+  .stage{
+    width:100%;
+    aspect-ratio: 1 / 1;
+    position:relative;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:radial-gradient(420px 260px at 50% 35%,#0c1416,#091112 70%);
+    overflow:hidden;
+    justify-self:end;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .stageHead{position:absolute;left:8px;top:6px;color:var(--muted);font-size:11px}
+  .ring{
+    width:160px;
+    height:160px;
+    margin:0;
+    border-radius:50%;
+    border:2px dashed rgba(255,255,255,.08);
+    display:grid;
+    place-items:center;
+    position:relative;
+  }
+  .circle{position:relative;width:140px;height:140px}
+  .marker{position:absolute;width:7px;height:7px;border-radius:50%;opacity:.9}
+  .m1{background:var(--g1)} .m2{background:var(--g2)} .m3{background:var(--g3)} .m4{background:var(--g4)}
+  .marker.active{box-shadow:0 0 10px rgba(255,255,255,.7);filter:brightness(1.8)}
+
+  .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:6px 0}
+  .kpi{background:#0a1213;border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
+  .kpi .label{color:#8aa79b;font-size:10px;margin-bottom:4px}
+  .kpi .value{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
+  #measureSec.value, #actVal.value, #statVal.value, #nextVal.value{min-width:74px;display:inline-block}
+
+  .controlsUnder{display:flex;gap:8px;justify-content:space-between;margin-top:2px}
+  .btn{padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:#152325;color:var(--ink);font-weight:700;cursor:pointer;font-size:13px}
+  .btn.primary{background:linear-gradient(180deg,#0a2a23,#0f3a30)}
+  .btn.stop{background:linear-gradient(180deg,#2a0a0a,#3a0f0f)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ProNome Basic</h1>
+  <div class="sub">MOONSKAI LABS LLC copyright 2026 all rights reserved.</div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="row">
+        <div>
+          <label for="bpmInput">BPM</label>
+          <div class="stepper">
+            <button id="bpmDec" class="stepBtn">−</button>
+            <input id="bpmInput" class="num sm" type="number" step="1" inputmode="numeric" placeholder="120"/>
+            <button id="bpmInc" class="stepBtn">+</button>
+            <button id="bpmSet" class="setBtn">Set</button>
+          </div>
+          <input id="bpmSlider" type="range" min="20" max="300" step="1" value="120" style="margin-top:6px"/>
+        </div>
+
+        <div>
+          <label for="measureBeats">Measure beats</label>
+          <div class="stepper">
+            <button id="measDec" class="stepBtn">−</button>
+            <input id="measureBeats" class="num sm" type="number" step="1" inputmode="numeric" placeholder="32"/>
+            <button id="measInc" class="stepBtn">+</button>
+            <button id="measSet" class="setBtn">Set</button>
+          </div>
+          <input id="measSlider" type="range" min="1" max="32" step="1" value="32" style="margin-top:6px"/>
+        </div>
+
+        <div>
+          <label>&nbsp;</label>
+          <span id="measureBadge" class="badge">/32</span>
+        </div>
+      </div>
+
+      <div id="steps" class="steps"></div>
+
+      <div id="layers" class="layers"></div>
+    </div>
+
+    <div class="card sideCard">
+      <div class="stage">
+        <div class="stageHead">Layer circle</div>
+        <div class="ring"><div id="circle" class="circle"></div></div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="label">Measure (s)</div><div id="measureSec" class="value">—</div></div>
+        <div class="kpi"><div class="label">Active</div><div id="actVal" class="value">0</div></div>
+        <div class="kpi"><div class="label">Status</div><div id="statVal" class="value">Idle</div></div>
+        <div class="kpi"><div class="label">Next Tick</div><div id="nextVal" class="value">0.000 s</div></div>
+      </div>
+
+      <div class="controlsUnder">
+        <button id="startBtn" class="btn primary" style="width:100%">Start</button>
+        <button id="stopBtn"  class="btn stop"    style="width:100%">Stop</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // Prevent accidental mouse-wheel changes on focused number inputs
+  document.addEventListener('wheel', (e)=>{
+    const el = document.activeElement;
+    if (el && el.tagName === 'INPUT' && el.type === 'number') el.blur();
+  }, {passive:true});
+
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const fmt2  = (x)=> (Math.round(x*100)/100).toFixed(2);
+
+  let bpm = 120;
+  let measureBeats = 32;
+  const STEP_CELLS = 32;
+  const MAX_BEATS  = 32;
+
+  // Sounds (renamed per your spec)
+  const SOUND_LABELS = [
+    ['woodblock','Woodblock'],   // replaces Hi Click
+    ['cowbell','Cowbell'],       // replaces Ride
+    ['shaker','Shaker (noise)'], // replaces weak Wood
+    ['nclap','Noise Clap'],      // replaces weak Sound
+    ['hihat','Hi-hat'],
+    ['snare','Snare'],
+    ['kick','Bass Drum'],
+    ['tom','Tom']
+  ];
+
+  const defaultLayers = [
+    { name:'L1', beats:4, enabled:true,  accent:true, vol:0.65, sound:'woodblock' },
+    { name:'L2', beats:3, enabled:true,  accent:true, vol:0.55, sound:'cowbell'   },
+    { name:'L3', beats:5, enabled:false, accent:true, vol:0.50, sound:'kick'      },
+    { name:'L4', beats:7, enabled:false, accent:true, vol:0.50, sound:'snare'     },
+  ];
+
+  // runtime
+  const rt = defaultLayers.map(()=>({ nextTime:0, period:0, idx:0, gain:null, rowCells:[], pulse:null }));
+  let audioCtx=null; const bank={};
+  let timerId=null; const LOOKAHEAD_MS=12, AHEAD_SEC=0.10;
+
+  // DOM refs
+  const stepsRoot = document.getElementById('steps');
+  const layersEl  = document.getElementById('layers');
+  const circle    = document.getElementById('circle');
+
+  const bpmInput  = document.getElementById('bpmInput');
+  const bpmSet    = document.getElementById('bpmSet');
+  const bpmSlider = document.getElementById('bpmSlider');
+  const bpmInc    = document.getElementById('bpmInc');
+  const bpmDec    = document.getElementById('bpmDec');
+
+  const measInput = document.getElementById('measureBeats');
+  const measSet   = document.getElementById('measSet');
+  const measSlider= document.getElementById('measSlider');
+  const measInc   = document.getElementById('measInc');
+  const measDec   = document.getElementById('measDec');
+
+  const measureBadge = document.getElementById('measureBadge');
+  const measureSec   = document.getElementById('measureSec');
+  const actVal    = document.getElementById('actVal');
+  const statVal   = document.getElementById('statVal');
+  const nextVal   = document.getElementById('nextVal');
+  const startBtn  = document.getElementById('startBtn');
+  const stopBtn   = document.getElementById('stopBtn');
+
+  // ===== Audio init + synths
+  function initAudio(){
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    bank.kick      = kick();
+    bank.snare     = snare();
+    bank.hihat     = hihat();
+    bank.cowbell   = cowbell();
+    bank.woodblock = woodblock();
+    bank.shaker    = shaker();
+    bank.nclap     = nclap();
+    bank.tom       = tom();
+    rt.forEach((r,i)=>{ const g = audioCtx.createGain(); g.gain.value = defaultLayers[i].vol; g.connect(audioCtx.destination); r.gain = g; });
+  }
+  function envExp(rate){ return t => Math.exp(-rate*t); }
+  function makeBuf(lenSec, fn){
+    const sr=44100,len=Math.floor(sr*lenSec);
+    const b=audioCtx.createBuffer(1,len,sr), d=b.getChannelData(0);
+    for(let i=0;i<len;i++){ d[i]=fn(i/sr); }
+    return b;
+  }
+  function schedule(buf, when, gain){ const s=audioCtx.createBufferSource(); s.buffer=buf; s.connect(gain); s.start(when); }
+
+  // Instruments
+  function kick(){ // bassier
+    return {
+      normal: makeBuf(0.11, t=> Math.sin(2*Math.PI*(90 - 52*t)*t) * Math.exp(-24*t) + 0.05*Math.sin(2*Math.PI*1200*t)*Math.exp(-80*t)),
+      accent: makeBuf(0.14, t=> Math.sin(2*Math.PI*(110 - 70*t)*t) * Math.exp(-22*t) + 0.06*Math.sin(2*Math.PI*1400*t)*Math.exp(-90*t))
+    };
+  }
+  function snare(){
+    const e1=envExp(60), e2=envExp(70), click=(t,f)=>Math.sin(2*Math.PI*f*t)*Math.exp(-60*t);
+    return {
+      normal: makeBuf(0.06, t => (Math.random()*2-1)*e1(t) + 0.35*click(t,1800)),
+      accent: makeBuf(0.07, t => (Math.random()*2-1)*e2(t) + 0.45*click(t,2200))
+    };
+  }
+  function hihat(){
+    const e1=envExp(120), e2=envExp(140);
+    return {
+      normal: makeBuf(0.025, t => (Math.random()*2-1)*e1(t)),
+      accent: makeBuf(0.03,  t => (Math.random()*2-1)*e2(t))
+    };
+  }
+  function cowbell(){ // replaces Ride
+    return {
+      normal: makeBuf(0.20, t => (square(560*t)+square(845*t))*Math.exp(-18*t)),
+      accent: makeBuf(0.24, t => (square(620*t)+square(920*t))*Math.exp(-18*t))
+    };
+    function square(x){ return (x%1)<0.5?1:-1; }
+  }
+  function woodblock(){ // replaces Hi Click
+    const e1=envExp(55), e2=envExp(65), sq=x=> (x%1)<0.5?1:-1;
+    return {
+      normal: makeBuf(0.028, t=> sq(20*t)*e1(t)),
+      accent: makeBuf(0.028, t=> sq(26*t)*e2(t))
+    };
+  }
+  function shaker(){ // replaces Wood
+    const e1=envExp(65), e2=envExp(75);
+    return {
+      normal: makeBuf(0.14, t => (Math.random()*2-1)*e1(t)),
+      accent: makeBuf(0.16, t => (Math.random()*2-1)*e2(t))
+    };
+  }
+  function nclap(){ // replaces Sound
+    const e=envExp(60);
+    return {
+      normal: makeBuf(0.12, t => (Math.random()*2-1)*e(t)),
+      accent: makeBuf(0.16, t => (Math.random()*2-1)*e(t))
+    };
+  }
+  function tom(){
+    return {
+      normal: makeBuf(0.12, t => Math.sin(2*Math.PI*(180 - 20*t)*t) * Math.exp(-22*t)),
+      accent: makeBuf(0.14, t => Math.sin(2*Math.PI*(210 - 25*t)*t) * Math.exp(-20*t))
+    };
+  }
+
+  // ===== UI build
+  function buildStepLights(){
+    stepsRoot.innerHTML='';
+    for (let i=0;i<4;i++){
+      const row=document.createElement('div'); row.className='rowSteps'; rt[i].rowCells=[];
+      for (let k=0;k<STEP_CELLS;k++){ const c=document.createElement('div'); c.className='cell c'+(i+1); row.appendChild(c); rt[i].rowCells.push(c); }
+      stepsRoot.appendChild(row);
+    }
+  }
+
+  function renderLayerRow(i){
+    const L=defaultLayers[i];
+    const row=document.createElement('div'); row.className='layer';
+
+    const tag=document.createElement('div'); tag.className='tag l'+(i+1); tag.textContent=L.name; row.appendChild(tag);
+    const pd =document.createElement('div'); pd.className='pulseDot pd'+(i+1); row.appendChild(pd); rt[i].pulse=pd;
+
+    // Beats: number arrows + small +/- steppers + slider-like feel (we keep Set to commit)
+    const beatsWrap=document.createElement('div');
+    beatsWrap.innerHTML = `
+      <label>Beats</label>
+      <div class="stepper">
+        <button class="stepBtn" id="btd_${i}">−</button>
+        <input id="bt_${i}" class="num sm" type="number" step="1" inputmode="numeric" placeholder="${L.beats}"/>
+        <button class="stepBtn" id="bti_${i}">+</button>
+        <button id="btset_${i}" class="setBtn">Set</button>
+      </div>`;
+    row.appendChild(beatsWrap);
+
+    // Sound select (renamed options)
+    const sndCtl=document.createElement('div');
+    const opts = SOUND_LABELS.map(([v,lab])=>`<option value="${v}" ${v===L.sound?'selected':''}>${lab}</option>`).join('');
+    sndCtl.innerHTML = `<label>Sound</label><select id="sd_${i}">${opts}</select>`;
+    row.appendChild(sndCtl);
+
+    // Accent
+    const accCtl=document.createElement('div');
+    accCtl.innerHTML = `<label>Accent</label><span class="switch"><input type="checkbox" id="ac_${i}" ${L.accent?'checked':''}><span>1</span></span>`;
+    row.appendChild(accCtl);
+
+    // Enable
+    const enCtl=document.createElement('div');
+    enCtl.innerHTML = `<label>Enable</label><span class="switch"><input type="checkbox" id="en_${i}" ${L.enabled?'checked':''}><span>On</span></span>`;
+    row.appendChild(enCtl);
+
+    // Volume
+    const volCtl=document.createElement('div'); volCtl.className='vwrap';
+    volCtl.innerHTML = `<input id="vl_${i}" class="vertical" type="range" min="0" max="1" step="0.01" value="${L.vol}" title="Vol">`;
+    row.appendChild(volCtl);
+
+    // Wire up beats controls
+    const numEl  = beatsWrap.querySelector('#bt_'+i);
+    const setEl  = beatsWrap.querySelector('#btset_'+i);
+    const decEl  = beatsWrap.querySelector('#btd_'+i);
+    const incEl  = beatsWrap.querySelector('#bti_'+i);
+
+    decEl.addEventListener('click', ()=>{ const v = Number.isFinite(numEl.valueAsNumber)? Math.floor(numEl.valueAsNumber) : L.beats; numEl.value = String(Math.max(1,(v||L.beats)-1)); });
+    incEl.addEventListener('click', ()=>{ const v = Number.isFinite(numEl.valueAsNumber)? Math.floor(numEl.valueAsNumber) : L.beats; numEl.value = String(Math.min(MAX_BEATS,(v||L.beats)+1)); });
+    setEl.addEventListener('click', ()=>{
+      const v = numEl.valueAsNumber;
+      const newBeats = (Number.isFinite(v) && v>0) ? Math.min(MAX_BEATS, Math.floor(v)) : L.beats;
+      L.beats = newBeats; numEl.value=''; numEl.placeholder=String(newBeats);
+      rebuildPeriods(true); rebuildCircle();
+    });
+
+    // Other handlers
+    sndCtl.querySelector('#sd_'+i).addEventListener('change', e=>{ L.sound=e.target.value; });
+    accCtl.querySelector('#ac_'+i).addEventListener('change', e=>{ L.accent=!!e.target.checked; });
+    enCtl.querySelector('#en_'+i).addEventListener('change', e=>{ L.enabled=!!e.target.checked; rebuildPeriods(true); rebuildCircle(); updateActive(); });
+    volCtl.querySelector('#vl_'+i).addEventListener('input', e=>{
+      const v=Number(e.target.value); L.vol=v; if(rt[i].gain&&audioCtx) rt[i].gain.gain.setTargetAtTime(v, audioCtx.currentTime, 0.001);
+    });
+
+    return row;
+  }
+
+  function buildLayers(){
+    layersEl.innerHTML=''; for (let i=0;i<defaultLayers.length;i++) layersEl.appendChild(renderLayerRow(i));
+  }
+
+  // ===== Circle: show ALL enabled layers
+  let circleMarkers=[[],[],[],[]];
+  function rebuildCircle(){
+    circle.innerHTML=''; circleMarkers=[[],[],[],[]];
+    const size=140,cx=size/2,cy=size/2,baseR=60,stepR=8;
+    defaultLayers.forEach((L,i)=>{
+      if(!L.enabled||!L.beats) return;
+      const r=baseR - i*stepR;
+      for(let k=0;k<L.beats;k++){
+        const ang=(k/L.beats)*Math.PI*2 - Math.PI/2;
+        const x=Math.cos(ang)*r + cx, y=Math.sin(ang)*r + cy;
+        const d=document.createElement('div'); d.className='marker m'+(i+1);
+        d.style.left=(x-3)+'px'; d.style.top=(y-3)+'px'; d.dataset.idx=k; if(k===0) d.classList.add('active');
+        circle.appendChild(d); circleMarkers[i].push(d);
+      }
+    });
+  }
+  function setCircleActive(layerIndex, beatIdx){
+    const arr=circleMarkers[layerIndex]; if(!arr.length) return;
+    for(const m of arr) m.classList.remove('active');
+    const node=arr.find(n=> Number(n.dataset.idx)===beatIdx); if(node) node.classList.add('active');
+  }
+
+  // ===== Measure & scheduler
+  function updateMeasureInfo(){
+    const secPerBeat = 60 / Math.max(1,bpm);
+    const measureSeconds = measureBeats * secPerBeat;
+    measureSec.textContent = fmt2(measureSeconds)+' s';
+    measureBadge.textContent = '/'+measureBeats;
+    return { measureSeconds };
+  }
+  function updateActive(){ actVal.textContent = String(defaultLayers.filter(L=>L.enabled).length); }
+
+  function rebuildPeriods(resetTimes){
+    const {measureSeconds} = updateMeasureInfo();
+    for (let i=0;i<defaultLayers.length;i++){
+      const L=defaultLayers[i], R=rt[i];
+      if(!L.enabled || !L.beats){ R.period=0; continue; }
+      R.period = measureSeconds / L.beats; // subdivide the 32-beat (default) measure
+      if (resetTimes && audioCtx){ R.idx=-1; R.nextTime=audioCtx.currentTime + 0.08; }
+    }
+  }
+
+  // Lane LED flash — strong and visible
+  function flashStep(layerIndex, beatIndex, beatsInLayer){
+    const cells = rt[layerIndex].rowCells;
+    if (!cells || !cells.length || !beatsInLayer) return;
+    const pos = Math.floor((beatIndex / beatsInLayer) * STEP_CELLS) % STEP_CELLS;
+    for (let i=0;i<cells.length;i++) cells[i].classList.remove('on');
+    const el = cells[pos];
+    if (el){ el.classList.add('on'); setTimeout(()=> el.classList.remove('on'), 120); }
+  }
+
+  function scheduler(){
+    const now = audioCtx.currentTime; let soonest=Infinity;
+    for (let i=0;i<defaultLayers.length;i++){
+      const L=defaultLayers[i], R=rt[i]; if(!L.enabled || !R.period) continue;
+      if (R.nextTime===0) R.nextTime = now + 0.08;
+      while (R.nextTime < now + AHEAD_SEC){
+        R.idx = (R.idx + 1) % L.beats;
+        const ins = bank[L.sound] || bank.woodblock;
+        const buf = (L.accent && R.idx===0) ? ins.accent : ins.normal;
+        schedule(buf, R.nextTime, R.gain);
+
+        // visuals (immediate + audio aligned)
+        flashStep(i, R.idx, L.beats);
+        ((layerIndex, beatIdx, beatsInLayer, when)=>{
+          const delay = Math.max(0, (when - audioCtx.currentTime)*1000 - 2);
+          setTimeout(()=> {
+            const pd=rt[layerIndex].pulse; if (pd){ pd.classList.add('pulseOn'); setTimeout(()=>pd.classList.remove('pulseOn'), 70); }
+            setCircleActive(layerIndex, beatIdx);
+            flashStep(layerIndex, beatIdx, beatsInLayer);
+          }, delay);
+        })(i, R.idx, L.beats, R.nextTime);
+
+        R.nextTime += R.period;
+      }
+      if (R.nextTime < soonest) soonest = R.nextTime;
+    }
+    nextVal.textContent = (isFinite(soonest) ? (soonest - now).toFixed(3) : '0.000')+' s';
+  }
+
+  function start(){
+    if (timerId) return;
+    initAudio(); statVal.textContent='Running';
+    rebuildPeriods(true);
+    timerId = setInterval(scheduler, LOOKAHEAD_MS);
+  }
+  function stop(){
+    if (!timerId) return;
+    clearInterval(timerId); timerId=null; statVal.textContent='Stopped';
+    rt.forEach(r=> r.rowCells.forEach(c=>c.classList.remove('on')));
+  }
+
+  // ===== Global controls: number arrows + sliders + +/- steppers
+  function applyBpm(v){ bpm = clamp(Math.floor(v), 20, 300); bpmSlider.value = String(bpm); rebuildPeriods(true); }
+  function applyMeasure(v){ measureBeats = clamp(Math.floor(v), 1, 32); measSlider.value = String(measureBeats); rebuildPeriods(true); rebuildCircle(); }
+
+  bpmSet.addEventListener('click', ()=>{
+    const v = bpmInput.valueAsNumber;
+    applyBpm(Number.isFinite(v) && v>0 ? v : bpm);
+    bpmInput.placeholder = String(bpm); bpmInput.value='';
+  });
+  bpmSlider.addEventListener('input', e=>{ applyBpm(Number(e.target.value)); bpmInput.placeholder=String(bpm); });
+  bpmInc.addEventListener('click', ()=>{ applyBpm((Number.isFinite(bpmInput.valueAsNumber)? bpmInput.valueAsNumber : bpm)+1); bpmInput.value=''; bpmInput.placeholder=String(bpm); });
+  bpmDec.addEventListener('click', ()=>{ applyBpm((Number.isFinite(bpmInput.valueAsNumber)? bpmInput.valueAsNumber : bpm)-1); bpmInput.value=''; bpmInput.placeholder=String(bpm); });
+
+  measSet.addEventListener('click', ()=>{
+    const v = measInput.valueAsNumber;
+    applyMeasure(Number.isFinite(v) && v>0 ? v : measureBeats);
+    measInput.placeholder = String(measureBeats); measInput.value='';
+    measureBadge.textContent = '/'+measureBeats;
+  });
+  measSlider.addEventListener('input', e=>{ applyMeasure(Number(e.target.value)); measInput.placeholder=String(measureBeats); measureBadge.textContent='/'+measureBeats; });
+  measInc.addEventListener('click', ()=>{ applyMeasure((Number.isFinite(measInput.valueAsNumber)? measInput.valueAsNumber : measureBeats)+1); measInput.value=''; measInput.placeholder=String(measureBeats); measureBadge.textContent='/'+measureBeats; });
+  measDec.addEventListener('click', ()=>{ applyMeasure((Number.isFinite(measInput.valueAsNumber)? measInput.valueAsNumber : measureBeats)-1); measInput.value=''; measInput.placeholder=String(measureBeats); measureBadge.textContent='/'+measureBeats; });
+
+  startBtn.addEventListener('click', start);
+  stopBtn .addEventListener('click', stop);
+
+  // ===== Build UI
+  function buildLayers(){
+    layersEl.innerHTML='';
+    for (let i=0;i<defaultLayers.length;i++) layersEl.appendChild(renderLayerRow(i));
+  }
+  function buildAll(){
+    buildStepLights();
+    buildLayers();
+    rebuildPeriods(false);
+    rebuildCircle();
+    updateActive();
+  }
+  buildAll();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg))
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
